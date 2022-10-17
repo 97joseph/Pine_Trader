@@ -1,0 +1,65 @@
+//@version=4
+study("Next Support and Resistance", shorttitle="Next Support and Resistance", overlay=true)
+
+len = input(title="Pivot Length", type=input.integer, defval=40, minval=1)
+
+is_pivot(src, is_high) =>
+    p = nz(src[len])
+    isFound = true
+    for i = 0 to len - 1
+        if is_high? src[i] >= p : src[i] <= p
+            isFound := false
+            break
+
+    for i = len + 1 to 2 * len
+        if is_high? src[i] >= p : src[i] <= p
+            isFound := false
+            break
+
+    isFound
+    
+is_high = is_pivot(high, true)
+is_low = is_pivot(low, false)
+
+var high_line = 0.0
+var low_line = 0.0
+
+high_line := is_high? nz(high[len]): high_line[1]
+low_line := is_low? nz(low[len]): low_line[1]
+
+var pline = 0.0
+pline := is_high? high_line: is_low? low_line: pline[1]
+
+if is_high or is_low
+    y = is_high? high[len]: low[len]
+    // label.new(x=bar_index[len], y=y, yloc=yloc.price, style=label.style_circle, size=size.tiny, color=c)
+    line.new(x1=bar_index[2*len], y1=y, x2=bar_index, y2=y, style=line.style_dotted, color=color.white)
+    
+_style=plot.style_linebr
+lbr(l) => l == l[1]? l: na
+
+src = hl2
+var x = 0
+var y = 0
+
+x := 0
+for i = 0 to 1000
+    if src < pline[i] and abs(src-pline[i]) < abs(src-pline[x]) 
+        x := i
+
+res = plot(lbr(pline[x]), title="Resistance Lines", color=color.red, style=_style)  
+
+y := 0
+for i = 0 to 1000
+    if  src > pline[i] and abs(src-pline[i]) < abs(src-pline[y]) 
+        y := i
+
+sup = plot(lbr(pline[y]), title="Support Lines", color=color.lime, style=_style) 
+
+w = color.new(color.white, 90)
+r = color.new(color.red, 90)
+fc = pline[x] > pline[y]?  w: r
+// fill(res, sup, color=fc)
+
+
+
