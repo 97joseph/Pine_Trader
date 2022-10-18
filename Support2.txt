@@ -1,0 +1,43 @@
+//@version=2
+study("Support/Resistance", shorttitle="S/R", overlay=true)
+//RSI
+src1 = close, len = 9
+up1 = rma(max(change(src1), 0), len)
+down1 = rma(-min(change(src1), 0), len)
+rsi = down1 == 0 ? 100 : up1 == 0 ? 0 : 100 - (100 / (1 + up1 / down1))
+//HMA source for CMO
+n=12
+n2ma=2*wma(close,round(n/2))
+nma=wma(close,n)
+diff=n2ma-nma
+sqn=round(sqrt(n))
+c=5
+n2ma6=2*wma(open,round(c/2))
+nma6=wma(open,c)
+diff6=n2ma6-nma6
+sqn6=round(sqrt(c))
+a1=wma(diff6,sqn6)
+a=wma(diff,sqn)
+//CMO
+len2 = 1
+gains= sum(a1>a, len2)
+losses = sum(a1<a, len2)
+cmo = 100 * (gains - losses) / (gains + losses)
+//Close Pivots
+len5 = 2
+h = highest(len5)
+h1 = dev(h, len5) ? na : h
+hpivot = fixnan(h1)
+l = lowest(len5)
+l1 = dev(l, len5) ? na : l
+lpivot = fixnan(l1)
+//Calc Values
+sup = rsi<25 and cmo>50 and lpivot
+res = rsi>75 and cmo<-50  and hpivot
+xup =  sup ? low : xup[1]
+xdown = res ? high : xdown[1]
+tf1 = security(tickerid, input('30', title="SR1 Timeframe"), xup)
+tf2 = security(tickerid, input('30', title="SR2 Timeframe"), xdown)
+//Plot
+plot(tf1, "SR1", color=orange, linewidth=2, style=circles, transp=20, join=false, editable=true)
+plot(tf2, "SR2", color=orange, linewidth=2, style=circles, transp=20, join=false, editable=true)
