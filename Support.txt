@@ -1,5 +1,4 @@
 //@version=4
-//By Juros
 //-------------------------------
 // support
 // If the price crosses above the previous quarter high and previous month high, and then crosses down the previous week low, the close becomes a support. 
