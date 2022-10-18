@@ -1,0 +1,68 @@
+//@version=4
+//By Juros
+//-------------------------------
+// support
+// If the price crosses above the previous quarter high and previous month high, and then crosses down the previous week low, the close becomes a support. 
+//As long as the price stays then below the previous week high, each close becomes a support. The    condition remains as long as the prices do not cross 
+//below previous quarter low OR previous month low, then support also stops.
+
+//-------------------------------
+// resistance
+// If the price crosses below the previous quarter low and previous month low, and then crosses up the previous week high, the close becomes a resistance.
+// As long as the price stays then above the previous week low, each close becomes a support.  The condition remains as long as the price does not cross
+// above previous quarter high OR previous month high, then resistance also stops.
+
+
+study(title="Universal support and resistance", shorttitle="Univ sup & res", overlay=true, precision=8)
+prevwkH = input(true, title="Show previous week high?")
+prevwkL = input(true, title="show previous week low?")
+
+//previous week
+prevWeekHigh = security(syminfo.tickerid, 'W', high[1], lookahead=true)
+prevWeekLow = security(syminfo.tickerid, 'W', low[1], lookahead=true)
+
+//previous Week Plots
+plot(prevwkH and prevWeekHigh ? prevWeekHigh : na, title="Prev Week High", style=plot.style_stepline,   linewidth=1, color=color.green,transp=20)
+plot(prevwkL and prevWeekLow ? prevWeekLow : na, title="Prev Week Low", style=plot.style_stepline, linewidth=1, color=color.green,transp=20)
+
+// alerts
+Buy = close > prevWeekHigh
+Sell = close < prevWeekLow
+
+Buyposmemo = false
+Buyposmemo := Buy ? true : Sell ? false : Buyposmemo[1]
+Buynow = Buy and not (Buyposmemo[1])
+bgcolor(Buynow ?  color(color.green) :na)
+
+Sellposmemo = false
+Sellposmemo := Sell ? true : Buy ? false : Sellposmemo[1]
+Sellnow = Sell and not (Sellposmemo[1])
+bgcolor(Sellnow ?  color(color.red) :na)
+
+alertcondition(Buy, title = "Buy now", message="buy now")
+alertcondition(Sell, title = "Sell now", message="Sell now")
+
+//-------------------------------------------------------------
+
+//universal trend line
+prevQuarterHigh = security(syminfo.tickerid, '3M', high[1], lookahead=true)
+prevQuarterLow = security(syminfo.tickerid, '3M', low[1], lookahead=true)
+
+upTrend = false
+upTrend := (not upTrend[1] and crossover(close, prevQuarterHigh)) or (upTrend[1] and not    crossunder(close, prevQuarterLow))
+
+//-------------------------------------------------------------
+var isSupport = false
+var isResistance = false 
+
+if (crossunder(close, prevWeekLow))
+    isSupport := true
+    isResistance := false
+
+if (crossover(close, prevWeekHigh))
+    isSupport := false
+    isResistance := true
+
+//plot support & resistance 
+plot (upTrend and isSupport ? low-(high-low+1) : na, style=plot.style_circles, color=color.green, transp=0, linewidth=4 )
+plot (not upTrend and isResistance ? high+(high-low+1) : na, style=plot.style_circles, color=color.red, transp=0, linewidth=4 )
